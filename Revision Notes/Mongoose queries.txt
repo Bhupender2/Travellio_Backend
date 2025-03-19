@@ -1,0 +1,150 @@
+Mongoose Queries – Everything You Need to Know 🚀
+Mongoose allows us to interact with MongoDB using various query methods. There are multiple ways to query data, filter results, update documents, delete records, and perform aggregations.
+
+1️⃣ Basic Queries (.find(), .findOne(), .findById())
+These methods are used to fetch data from the database.
+
+🔹 Find all documents (.find())
+const users = await User.find();  // Returns an array of all users
+console.log(users);
+
+🔹 Find one document (.findOne())
+const user = await User.findOne({ email: "johndoe@example.com" });  
+console.log(user);
+This returns the first document that matches the condition.
+
+🔹 Find by ID (.findById())
+const user = await User.findById("60f5f1d5c3b2a033b8d99e5b");
+console.log(user);
+This finds a user by MongoDB ObjectId.
+
+2️⃣ Filtering with Queries (where, select, sort, limit, skip)
+Mongoose allows filtering and modifying query results.
+
+🔹 .where() – Chaining conditions
+const users = await User.where("age").gt(18).lt(30);  // Users between 18 and 30
+console.log(users);
+.gt(18) → Greater than 18
+.lt(30) → Less than 30
+
+🔹 .select() – Fetch only specific fields
+const users = await User.find().select("name email");  
+console.log(users);
+This fetches only name and email, excluding other fields.
+
+🔹 .sort() – Sorting results
+const users = await User.find().sort("name");  // Sort by name (A-Z)
+For descending order:
+
+const users = await User.find().sort("-name");  // Sort by name (Z-A)
+🔹 .limit() – Limit number of results
+const users = await User.find().limit(5);  // Returns only 5 users
+🔹 .skip() – Skip records (for pagination)
+const users = await User.find().skip(10).limit(5);  // Skips first 10 users, then returns 5 users
+3️⃣ Comparison Operators
+You can use MongoDB comparison operators inside .find(), .where(), or .aggregate().
+
+Operator	Description	Example
+$gt	Greater than	{ age: { $gt: 18 } }
+$lt	Less than	{ age: { $lt: 30 } }
+$gte	Greater than or equal	{ age: { $gte: 18 } }
+$lte	Less than or equal	{ age: { $lte: 30 } }
+$ne	Not equal	{ status: { $ne: "inactive" } }
+$in	Matches values in array	{ status: { $in: ["active", "pending"] } }
+$nin	Excludes values in array	{ status: { $nin: ["banned"] } }
+Example:
+
+const users = await User.find({ age: { $gte: 18, $lte: 30 } });
+4️⃣ Logical Queries ($or, $and, $not, $nor)
+These operators allow us to combine conditions.
+
+🔹 $or – Either condition must match
+const users = await User.find({
+  $or: [{ age: { $lt: 18 } }, { status: "inactive" }]
+});
+This finds users below 18 OR inactive.
+
+🔹 $and – Both conditions must match
+const users = await User.find({
+  $and: [{ age: { $gt: 18 } }, { status: "active" }]
+});
+This finds users above 18 AND active.
+
+🔹 $not – Opposite of a condition
+const users = await User.find({ age: { $not: { $gt: 18 } } });
+Finds users 18 or younger.
+
+🔹 $nor – Neither condition should match
+const users = await User.find({
+  $nor: [{ age: { $lt: 18 } }, { status: "inactive" }]
+});
+Finds users who are not below 18 AND not inactive.
+
+5️⃣ Updating Documents (updateOne, updateMany, findByIdAndUpdate)
+🔹 .updateOne() – Update a single document
+await User.updateOne({ email: "johndoe@example.com" }, { age: 25 });
+🔹 .updateMany() – Update multiple documents
+await User.updateMany({ age: { $lt: 18 } }, { status: "minor" });
+🔹 .findByIdAndUpdate() – Update by ID & return updated doc
+const user = await User.findByIdAndUpdate(
+  "60f5f1d5c3b2a033b8d99e5b",
+  { name: "Updated Name" },
+  { new: true, runValidators: true }
+);
+console.log(user);
+{ new: true } → Returns updated document
+{ runValidators: true } → Validates the new data
+6️⃣ Deleting Documents (deleteOne, deleteMany, findByIdAndDelete)
+🔹 .deleteOne() – Delete a single document
+await User.deleteOne({ email: "johndoe@example.com" });
+🔹 .deleteMany() – Delete multiple documents
+await User.deleteMany({ age: { $lt: 18 } });
+🔹 .findByIdAndDelete() – Delete by ID
+await User.findByIdAndDelete("60f5f1d5c3b2a033b8d99e5b");
+7️⃣ Counting & Checking Existence
+🔹 .countDocuments()
+const count = await User.countDocuments({ status: "active" });
+console.log(count);
+🔹 .exists()
+const exists = await User.exists({ email: "johndoe@example.com" });
+console.log(exists); // Returns `true` or `false`
+
+8️⃣ Aggregation Queries (.aggregate())
+Aggregation allows for complex queries, like grouping and calculating data.
+
+Example: Get the average age of all users.
+
+const result = await User.aggregate([
+  { $group: { _id: null, avgAge: { $avg: "$age" } } }
+]);
+console.log(result);
+Example: Count users by status.
+
+const result = await User.aggregate([
+  { $group: { _id: "$status", count: { $sum: 1 } } }
+]);
+console.log(result);
+9️⃣ Query Middleware (pre, post)
+You can execute logic before or after a query runs.
+
+🔹 pre middleware (Before execution)
+userSchema.pre("save", function (next) {
+  console.log("Before saving a user...");
+  next();
+});
+🔹 post middleware (After execution)
+userSchema.post("save", function (doc, next) {
+  console.log("User saved:", doc);
+  next();
+});
+
+🔥 Summary of Query Methods
+Query Type	Method
+Find	.find(), .findOne(), .findById()
+Filter	.where(), .select(), .sort(), .limit(), .skip()
+Comparison	$gt, $lt, $gte, $lte, $ne, $in, $nin
+Logical	$or, $and, $not, $nor
+Update	.updateOne(), .updateMany(), .findByIdAndUpdate()
+Delete	.deleteOne(), .deleteMany(), .findByIdAndDelete()
+Count & Exists	.countDocuments(), .exists()
+Aggregation	.aggregate()
