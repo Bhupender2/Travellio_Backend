@@ -29,15 +29,35 @@ exports.getDocById = (Model, popluateOptions) => catchAsync(async (req, res, nex
 
 exports.getAllDocs = Model => catchAsync(async (req, res, next) => {
     let filter = {};
-    if (req.params.tourId)
-        filter = { tour: req.params.tourId }
+    if (req.params.tourId) filter = { tour: req.params.tourId };
 
-    let features = new APIFeatures(Model.find(filter), req.query).filter().sort().fields().pagination();
+    let features = new APIFeatures(Model.find(filter), req.query)
+        .filter()
+        .sort()
+        .fields()
 
-    const docs = await features.query //features has 2 prop unresoled query and queryObj
+    const filteredQuery = features.query;
+    const totalDocuments = await filteredQuery.clone().countDocuments();
+
+    // Now apply pagination
+    features.pagination();
+    const docs = await features.query; // Execute the paginated query
+
+    const limit = req.query.limit * 1 || 5;
+    const page = req.query.page * 1 || 1;
+    const totalPages = Math.ceil(totalDocuments / limit);
+
     res.status(200).json({
         status: 'success',
-        data: docs
+        results: docs.length,
+        pagination: {
+            totalDocuments,
+            totalPages,
+            currentPage: page,
+            limit
+        },
+        data: docs,
+        message: docs.length === 0 ? 'Oops! Looks like we didn’t find any tours that match.' : undefined
     });
 })
 
@@ -58,7 +78,7 @@ exports.deleteDoc = (Model, updateReviewStats) => catchAsync(async (req, res, ne
     });
 });
 
-exports.updateDoc = (Model,updateReviewStats) => catchAsync(async (req, res) => {
+exports.updateDoc = (Model, updateReviewStats) => catchAsync(async (req, res) => {
     console.log(req.params)
     const updatedReview = await Model.findByIdAndUpdate(req.params.id, req.body, {
         new: true,

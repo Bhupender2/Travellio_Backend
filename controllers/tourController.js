@@ -1,4 +1,3 @@
-const { Router } = require('express')
 const tourModel = require('../models/tourModel')
 const catchAsync = require('../utils/catchAsync')
 const { createDoc, deleteDoc, getDocById, updateDoc, getAllDocs } = require('./handleFactory')
