@@ -1,10 +1,12 @@
 const userModel = require("../models/userModel")
+const { promisify } = require('util');
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/AppError')
 var jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const Email = require('../Email.js');
+
 
 const jwtSignin = async (payload) => {
     return await jwt.sign({ payload }, process.env.SECRET_KEY, {
@@ -13,12 +15,11 @@ const jwtSignin = async (payload) => {
 }
 
 const jwtVerify = (req, next) => {
-    const token = req.cookies?.login;  // Ensure req.cookies is defined
-    if (!token) {
-        return next(new AppError('You are not logged in! Please login again to get access..', 401));
-    }
-
     try {
+        const token = req.cookies?.login;  // Ensure req.cookies is defined
+        if (!token) {
+            return next(new AppError('You are not logged in! Please login again to get access..', 401));
+        }
         return jwt.verify(token, process.env.SECRET_KEY);
     } catch (err) {
         return next(new AppError('Invalid token. Please log in again.', 401));
@@ -40,7 +41,6 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-    console.log(req.body)
     //check is email and password exist
     if (!email || !password)
         return next(new AppError('Kindly provide both email and password', 404));
@@ -63,31 +63,56 @@ exports.login = catchAsync(async (req, res, next) => {
         name: doc.name,
         email: doc.email,
         role: doc.role,
-        docId : doc._id
+        docId: doc._id
     });
 });
 
+// exports.logout = catchAsync(async (req, res, next) => {
+//     // Clear the cookie named 'login'
+//     // console.log(req)
+//     res.clearCookie('login', {
+//         path: '/', // Ensure the cookie path matches the one used during login
+//         httpOnly: true, // Ensure cookie is HTTP-only
+//         sameSite: 'none',       // Ensure this matches your cookie's setting
+//         secure: false
+//     });
+
+//     res.status(200).json({ message: 'Logged out successfully' });
+// });
+
 exports.logout = catchAsync(async (req, res, next) => {
-    // Clear the cookie named 'login'
-    // console.log(req)
-    res.clearCookie('login', {
-        path: '/', // Ensure the cookie path matches the one used during login
-        httpOnly: true, // Ensure cookie is HTTP-only
-        sameSite: 'none',       // Ensure this matches your cookie's setting
-        secure: false
+    res.cookie('login', '', {
+        expires: new Date(0),              // Set to past date
+        httpOnly: true,
+        sameSite: 'Lax',
+        secure: false,
     });
 
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
-exports.protectedRoute = (req, res, next) => {
-    const isVerified = jwtVerify(req, next);
-    if (!isVerified)
-        next(new AppError('JsonWebTokenError', '401'))
-    req.userId = isVerified.payload;
 
-    next();
-}
+exports.protectedRoute = (req, res, next) => {
+    try {
+        // 1. Get token from cookie
+        const token = req.cookies.login;
+        if (!token) {
+            return res.status(401).json({ message: 'You are not logged in' });
+        }
+
+        // 2. Verify token
+        const decoded = jwt.verify(token, process.env.SECRET_KEY); // Use same secret used to sign
+
+        // 3. Attach user info to request (optional)
+        req.user = decoded;
+
+        // 4. Move to next middleware
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid or expired token' });
+    }
+};
+
 
 exports.restrictTo = (...roles) => {
     return async (req, res, next) => {

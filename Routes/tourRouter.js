@@ -20,15 +20,15 @@ router.route('/tours-within/:distace/center/:latlng/unit/:unit').get(getToursWit
 
 //CALCULATE DISTANCE BETWEEN CURRENT LOCATION(lat,ln) TO STARTING POINT OF ALL TOURS
 router.route('/distances/:latlng/unit/:unit').get(getDistances)
-
+//router.route('/:id').get(findTourById)
 router.use(protectedRoute) //Refactor: To check whether user is logged in before doing the following operations
 
 router.route('/tourStats')
     .get(getTourStats)
 
 router.route('/:id')
-    .delete(protectedRoute, restrictTo('admin', 'lead-guide'), deleteTour)
     .get(findTourById)
-    .patch(protectedRoute, restrictTo('admin', 'lead-guide'), patchTour)
+    .delete(restrictTo('admin', 'lead-guide'), deleteTour)
+    .patch(restrictTo('admin', 'lead-guide'), patchTour)
 
 module.exports = router;

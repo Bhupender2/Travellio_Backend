@@ -6,7 +6,7 @@ const AppError = require('../utils/AppError')
 exports.aliasTopTours = (req, res, next) => {
     //  http://localhost:8000/api/v1/tours/top5-cheapTours ---> We assign route to a specific query which we know user can search multiple times also so user memorize it easily 
     req.query.sort = '-ratingsAverage,price' //first sort according to ratingsAverage(desc order) then price(asc order)
-    req.query.fields = 'name,ratingsAverage,summary,startLocation,locations,startDates,maxGroupSize,price'
+    req.query.fields = 'name,ratingsAverage,summary,startLocation,locations,startDates,maxGroupSize,price,images,duration'
     req.query.limit = 5
     
     next();

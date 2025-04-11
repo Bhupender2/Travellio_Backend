@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
         unique: [true, 'This Email is already had a account'],
         validator: [validator.isEmail, 'Please provide valid Email id']
     },
+    photo: String,
     role: {
         type: String,
         enum: ['admin', 'user', 'guide', 'lead-guide'],
@@ -35,10 +36,10 @@ const userSchema = new mongoose.Schema({
         },
         message: 'Password and Confirm Password does not match'
     },
-    resetPasswordToken:{
-        type: String  
+    resetPasswordToken: {
+        type: String
     },
-    resetPasswordExpires:{
+    resetPasswordExpires: {
         type: Date
     }
 })
@@ -51,7 +52,7 @@ userSchema.pre('save', async function (next) {
     next();
 })
 
-userSchema.methods.correctPassword = async(enteredPass, userPassword)=>{
+userSchema.methods.correctPassword = async (enteredPass, userPassword) => {
     return await bcrypt.compare(enteredPass, userPassword);
 }
 

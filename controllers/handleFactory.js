@@ -14,6 +14,7 @@ exports.createDoc = Model => catchAsync(async (req, res) => {
 })
 
 exports.getDocById = (Model, popluateOptions) => catchAsync(async (req, res, next) => {
+    console.log(req.params)
     let query = Model.findById(req.params.id);
     if (popluateOptions)
         query = query.populate(popluateOptions);

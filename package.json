@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
-    "debug": "ndb npm start"
+    "debug": "ndb npm start",
+    "import-data": "node dev-data/data/import-dev-data.js --import",
+    "delete-data": "node dev-data/data/import-dev-data.js --delete"
   },
   "keywords": [],
   "author": "",
