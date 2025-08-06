@@ -4,7 +4,7 @@ const Email = require("../Email"); // importing my Email function here
 
 const router = express.Router();
 
-router.post("/contact", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { name, email, phone, message } = req.body; // getting the form data
 
