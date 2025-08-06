@@ -45,7 +45,7 @@ app.use(xss());
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
-app.use("/api", contactRouter);
+app.use("/api/v1/contact", contactRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Travellio API!");
